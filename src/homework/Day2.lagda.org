@@ -15,10 +15,12 @@ open import Day2
 #+begin_src agda2
 
 data Treeₗ (A : Type₀) : Type₀ where
-  -- заполните конструкторы
+  Leafₗ : A → Treeₗ A
+  Branchₗ : Treeₗ A → Treeₗ A → Treeₗ A
 
 data Treeₙ (A : Type₀) : Type₀ where
-  -- заполните конструкторы
+  Leafₙ : Treeₙ A
+  Branchₙ : A → Treeₙ A → Treeₙ A → Treeₙ A
 
 #+end_src
 
@@ -28,10 +30,12 @@ data Treeₙ (A : Type₀) : Type₀ where
 #+begin_src agda2
 
 traverseₗ : {A : Type₀} → Treeₗ A → List A
-traverseₗ = {!!}
+traverseₗ (Leafₗ x) = x ∷ []
+traverseₗ (Branchₗ l r) = traverseₗ l ++ traverseₗ r
 
 traverseₙ : {A : Type₀} → Treeₙ A → List A
-traverseₙ = {!!}
+traverseₙ Leafₙ = []
+traverseₙ (Branchₙ x l r) = x ∷ traverseₙ l ++ traverseₙ r
 
 #+end_src
 
@@ -55,7 +59,8 @@ _∘ₕ_ : {A B C : Type₀} → (B → C) → (A → B) → (A → C)
 (g ∘ₕ f) x = g (f x)
 
 -- dependent
-_∘_ : {!!}
+_∘_ : {A : Type₀} {B : A → Type₀} {C : (a : A) → B a → Type₀}
+    → (g : {a : A} (b : B a) → C a b) → (f : (a : A) → B a) → (a : A) → C a (f a)
 (g ∘ f) x = g (f x)
 
 #+end_src
@@ -68,7 +73,9 @@ _∘_ : {!!}
 #+begin_src agda2
 
 contra′ : {A B : 𝓤₀} → (lem : (Π X ꞉ 𝓤₀ , Dec X)) → (¬ B ⇒ ¬ A) → (A ⇒ B)
-contra′ = {!!}
+contra′ {A} {B} lem nbna x with lem B
+... | inj₁ lb = lb
+... | inj₂ rb = ex-falso-quodlibet (nbna rb x)
 
 #+end_src
 
@@ -83,13 +90,13 @@ contra′ = {!!}
 #+begin_src agda2
 
 _≡ₗ_ : {A : Type₀} → (x y : A) → Type₁
-_≡ₗ_ {A} x y = {!!}
+_≡ₗ_ {A} x y = Π P ꞉ (A → Type₀) , (P x → P y)
 
 leibniz-to-martin-löf : {A : Type₀} (x y : A) → x ≡ₗ y → x ≡ y
-leibniz-to-martin-löf = {!!}
+leibniz-to-martin-löf x y eq = {!   !}
 
 martin-löf-to-leibniz : {A : Type₀} (x y : A) → x ≡ y → x ≡ₗ y
-martin-löf-to-leibniz = {!!}
+martin-löf-to-leibniz x y eq = λ p → {!!}
 
 #+end_src
 
@@ -99,14 +106,30 @@ martin-löf-to-leibniz = {!!}
 
 #+begin_src agda2
 
+{-
 Even : ℕ → Type₀
-Even n = {!!}
+Even zero = ⊤
+Even (suc zero) = ⊥
+Even (suc (suc n)) = Even n
 
 Odd : ℕ → Type₀
-Odd n = {!!}
+Odd zero = ⊥
+Odd (suc zero) = ⊤
+Odd (suc (suc n)) = Odd n
+-}
+mutual
+  Even : ℕ → Type₀
+  Even zero = ⊤
+  Even (suc n) = Odd n
+
+  Odd : ℕ → Type₀
+  Odd zero = ⊥
+  Odd (suc n) = Even n
 
 even-dec : Π n ꞉ ℕ , Dec (Even n)
-even-dec = {!!}
+even-dec zero = inj₁ tt
+even-dec (suc zero) = inj₂ id
+even-dec (suc (suc n)) = even-dec n
 
 #+end_src
 
@@ -114,7 +137,16 @@ even-dec = {!!}
 Теперь вы сможете попробовать доказать следующую теорему:
 #+begin_src agda2
 
+lemma-suc : Π m ꞉ ℕ , (suc m > m)
+lemma-suc zero = tt
+lemma-suc (suc n) = lemma-suc n
+
+lemma-evens> : Π m ꞉ ℕ , Π n ꞉ ℕ , (Even m ∧ Even n ∧ n > m ⇒ n > suc m)
+lemma-evens> zero (suc (suc n)) (even-m , even-n , n>m) = n>m
+lemma-evens> (suc (suc m))  (suc (suc n)) pf = lemma-evens> m n pf
+-- lemma-evens> (suc (suc m)) zero (even-m , even-n , ())
+
 hmm : Π m ꞉ ℕ , Π n ꞉ ℕ , (Even m ∧ Even n ∧ n > m ⇒ (Σ k ꞉ ℕ , k > m ∧ n > k ∧ Odd k))
-hmm = {!!}
+hmm m n (even-m , even-n , n>m) = suc m , lemma-suc m , lemma-evens> m n (even-m , even-n , n>m)  , even-m
 
 #+end_src
