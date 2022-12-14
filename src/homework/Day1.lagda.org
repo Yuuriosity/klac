@@ -13,13 +13,17 @@ open import Day1
 #+begin_src agda2
 
 _&&'_ : 𝔹 → 𝔹 → 𝔹
-a &&' b = {!!}
+true &&' true = true
+_ &&' _ = false
 
 _xor_ : 𝔹 → 𝔹 → 𝔹
-_xor_ = {!!}
+true xor true = false
+false xor false = false
+_ xor _ = true
 
 -- теорему/функцию/константу можно назвать "_", если вы не собираетесь её больше использовать
 -- это удобно, чтобы писать безымянные юнит-тесты
+
 _ : true &&' true ≡ true
 _ = refl _
 
@@ -39,13 +43,15 @@ _ = refl _
 #+begin_src agda2
 
 _^_ : ℕ → ℕ → ℕ
-n ^ m = {!!}
+n ^ zero = suc zero
+n ^ (suc m) = n * (n ^ m)
 
 _ : 3 ^ 4 ≡ 81
 _ = refl 81
 
 _! : ℕ → ℕ
-n ! = {!!}
+zero ! = 1
+(suc n) ! = suc n * n !
 
 _ : 4 ! ≡ 24
 _ = refl 24
@@ -63,7 +69,9 @@ max (suc m) (suc n) = suc (max m n)
 
 
 min : ℕ → ℕ → ℕ
-min = {!!}
+min zero m = zero
+min m zero = zero
+min (suc m) (suc n) = suc (min m n)
 
 _ : min 5 3 ≡ 3
 _ = refl 3
@@ -78,23 +86,23 @@ _ = refl 3
 
 id : {A : 𝓤₀} →
      A → A
-id = {!!}
+id x = x
 
-_ : {A B : 𝓤₀} →
+const : {A B : 𝓤₀} →
     A → (B ⇒ A)
-_ = {!!}
+const x y = x
 
 ⊥-is-false : ¬ ⊥
-⊥-is-false = {!!}
+⊥-is-false = id
 
 -- Как вы думаете, чего не хватает для полного доказательства?
 contra : {A B : 𝓤₀} →
          (A ⇒ B) ⇔ (¬ B ⇒ ¬ A)
-contra = {!!}
+contra = (λ x x₁ x₂ → x₁ (x x₂)) , (λ x x₁ → {! x !})
 
 not-both : {A : 𝓤₀} →
            ¬ (A ∧ ¬ A)
-not-both = {!!}
+not-both (fst₁ , snd₁) = snd₁ fst₁
 
 #+end_src
 
@@ -105,7 +113,8 @@ not-both = {!!}
 #+begin_src agda2
 
 map : {A B : Type₀} → (A → B) → List A → List B
-map f xs = {!!}
+map f [] = []
+map f (x ∷ xs) = f x ∷ map f xs
 
 _ : map (_+ 3) (1 ∷ 2 ∷ 3 ∷ []) ≡ 4 ∷ 5 ∷ 6 ∷ []
 _ = refl _
@@ -119,7 +128,9 @@ _ = refl _
 #+begin_src agda2
 
 filter : {A : Type₀} (p : A → 𝔹) → List A → List A
-filter = {!!}
+filter p [] = []
+filter p (x ∷ xs) = let fxs = filter p xs in
+                    if p x then x ∷ fxs else fxs
 
 is-non-zero : ℕ → 𝔹
 is-non-zero zero    = false
@@ -133,3 +144,6 @@ filter-example = refl _
 * Задача 7 (★★★★)
 Мы определили пустой тип ~⊥~, соответствующий ложным высказываниям в логике, т.к. у него нет элементов (доказательств).
 Бывают ли другие пустые типы? Если да, приведите пример.
+
+data Void : Type₀ → Type₀ where
+    Void : Void Void
